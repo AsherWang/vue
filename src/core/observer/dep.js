@@ -6,6 +6,9 @@ import config from '../config'
 
 let uid = 0
 
+// Dep的实例包含一组Watcher
+// 初始化的时候收集依赖， 然后在适当的时候通知所有Watcher
+// Dep的实例还有一个全局唯一的id
 /**
  * A dep is an observable that can have multiple
  * directives subscribing to it.
@@ -36,6 +39,8 @@ export default class Dep {
 
   notify () {
     // stabilize the subscriber list first
+    // 这里没懂
+    // 不做copy的话, subs可能会在下边的某一个循环执行时被改掉么
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -52,6 +57,13 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+// 这块需要理解一下
+// 收集依赖的时候, 同一时间只有一个watcher,所以可以放全局(用一个全局变量来存其引用)
+
+// 猜想
+// 这里将pushTarget和popTarget暴露出去,将来收集对某个Watcher依赖的时候， push进来即可
+
+
 Dep.target = null
 const targetStack = []
 

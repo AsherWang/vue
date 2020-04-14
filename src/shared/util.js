@@ -142,6 +142,9 @@ export function remove (arr: Array<any>, item: any): Array<any> | void {
 /**
  * Check whether an object has the property.
  */
+// 为何不直接return obj.hasOwnProperty(key)呢
+// 因为传入的obj在传入之前，如果有obj.hasOwnProperty = null或其他类似的操作
+// 那么代码执行到这里就跪了, 这里直接用Object.prototype.hasOwnProperty则确保这个方法正常
 const hasOwnProperty = Object.prototype.hasOwnProperty
 export function hasOwn (obj: Object | Array<*>, key: string): boolean {
   return hasOwnProperty.call(obj, key)
@@ -150,6 +153,10 @@ export function hasOwn (obj: Object | Array<*>, key: string): boolean {
 /**
  * Create a cached version of a pure function.
  */
+// 这个是为了性能考虑,对于纯函数来说, 输入确定,那么输出也就一定确定了
+// 那么可能同样的参数会传进来,那么第二次传进来的时候,直接拿缓存的结果返回出去就好了
+// cache对象缓存的是计算结果, key是输入, value是输出
+// 先查有没有, 没有再去调用函数,然后把结果存起来并返回
 export function cached<F: Function> (fn: F): F {
   const cache = Object.create(null)
   return (function cachedFn (str: string) {
@@ -332,6 +339,7 @@ export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
 /**
  * Ensure a function is called only once.
  */
+// 闭包里边立flag
 export function once (fn: Function): Function {
   let called = false
   return function () {

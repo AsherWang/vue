@@ -16,6 +16,14 @@ import {
   isServerRendering
 } from '../util/index'
 
+// Dep 是用于收集依赖的类
+// VNode则是虚拟解点， 对应HTML元素实例或者自定义组件实例
+// def 给一个对象添加一个属性及其值， 使用Object.definePoperty, 默认不可枚举
+// warn 用于非生产环境下的控制台警告
+// hasOwn 判断一个对象是否有某个属性
+// hasProto 判断是否支持__proto__属性
+// a={} a.__prot__ === Object.getPrototypeOf(a) 是返回true的 但是 __proto__已废弃,不保证所有浏览器都支持
+
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
 /**
