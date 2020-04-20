@@ -18,6 +18,15 @@ import type { SimpleSet } from '../util/index'
 
 let uid = 0
 
+
+// watcher做了什么事情
+// watcher接收并解析这个表达式,这个表达式是获取某个值比如'form.obk.name'
+
+// watcher是对组件起作用的
+// 对于一个组件实例, watcher实例拿到一个 expression
+// 根据这个expression, 自己格式化出一个getter出来
+// 这个getter将在本watcher实例的get方法被调用的时候使用到
+
 /**
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
@@ -100,6 +109,9 @@ export default class Watcher {
    */
   get () {
     pushTarget(this)
+    // 将本watcher实例的引用压栈, 那么Dep.target就是本实例的引用了
+    // 之后的所有的涉及到的依赖收集
+    // 都将收到到本watcher实例的deps列表中
     let value
     const vm = this.vm
     try {
@@ -140,13 +152,19 @@ export default class Watcher {
    * Clean up for dependency collection.
    */
   cleanupDeps () {
+    // 将之前的depd一个个解除关系
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
+      // 如果是新旧都有的依赖,就不解除关系了
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
     }
+    // newDepIds -> depIds
+    // newDepIds 置空
+    // newDeps -> deps
+    // newDeps 置空
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
@@ -212,6 +230,7 @@ export default class Watcher {
     this.dirty = false
   }
 
+  // 重新收集一遍依赖,放到newDeps中
   /**
    * Depend on all deps collected by this watcher.
    */

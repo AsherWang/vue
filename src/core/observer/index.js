@@ -24,6 +24,9 @@ import {
 // hasProto 判断是否支持__proto__属性
 // a={} a.__prot__ === Object.getPrototypeOf(a) 是返回true的 但是 __proto__已废弃,不保证所有浏览器都支持
 
+
+// arrayMethods
+
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
 /**
@@ -36,6 +39,8 @@ export function toggleObserving (value: boolean) {
   shouldObserve = value
 }
 
+// 一个观察者实例会对应一个dep
+// dep 对 Observer 是一对多关系
 /**
  * Observer class that is attached to each observed
  * object. Once attached, the observer converts the target
@@ -47,19 +52,35 @@ export class Observer {
   dep: Dep;
   vmCount: number; // number of vms that have this object as root $data
 
+  // 应该确保这里不是对象就是
   constructor (value: any) {
     this.value = value
+    // 这里实例化一个Observer的时候也必然实例化一个Dep
     this.dep = new Dep()
     this.vmCount = 0
+    // 将本ob实力的引用放到被观察的值的__ob__属性上
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
+      // 对于数据的特殊处理
+      // 如果要观察的值是一个数组,那么把这几个方法给他覆盖掉
+      // 相当于如果一个对象的原型链上有一个方法叫pop，
+      // 这里copyAugment就直接在他对象自身上添加一个pop属性，作用和原方法一致
+      // 这里protoAugment则更粗暴,相当于直接修改其proptype
+      // 但是有加料
+      // 细节在arrayMethods所在文件里， array.js
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 然后对array进行监察
+      // for 对每个元素进行ob
+      // 这里的每个元素, 都会有一个新的ob来监察
+      //todo: 这里的数组如果是[1,2,3,4] 又该当如何
       this.observeArray(value)
     } else {
+      // 对一般obj进行观察
+      // 遍历其属性，为value添加setter和getter
       this.walk(value)
     }
   }
@@ -110,6 +131,18 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
   }
 }
 
+
+// 这里需要明确做一下区分
+// observer
+// walk
+// 
+
+// observe 接收一个对象，可以是数组
+// 为value创建一个observer。如果value本身已经有了ob
+// 那么将已存在ob [并且是asRootData,] 的vmCount+1，然后返回该ob
+// 如果没有并且确定应该为该value创建ob
+// 那么创建新的并返回
+
 /**
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
@@ -137,6 +170,9 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   return ob
 }
 
+// 把某个对象的名为key的属性定义为可响应的
+//todo: 问题, get方法在原有get方法中加料, 加如了收集依赖的操作
+// 那么如果get方法被调用第二次的时候,依赖收集两遍?
 /**
  * Define a reactive property on an Object.
  */
@@ -167,7 +203,11 @@ export function defineReactive (
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 常规获取值
+
+      // 加料: 收集依赖,如果当前Dep有target,那么为其收集依赖
       if (Dep.target) {
+        // 将此次dep对象添加到watcher的dep中
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
@@ -176,6 +216,7 @@ export function defineReactive (
           }
         }
       }
+      // 常规返回
       return value
     },
     set: function reactiveSetter (newVal) {

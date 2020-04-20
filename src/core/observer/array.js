@@ -21,6 +21,10 @@ const methodsToPatch = [
 /**
  * Intercept mutating methods and emit events
  */
+// 拦截数组的一些方法，然后需要触发一些事件
+// 这些方法是对调用者产生修改的
+// 比如pop会修改调用者，而concat不会
+// todo: 这里之后再看，observer在这里需要一些操作完成对别处的通知
 methodsToPatch.forEach(function (method) {
   // cache original method
   const original = arrayProto[method]
