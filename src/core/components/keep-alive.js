@@ -5,6 +5,8 @@ import { getFirstComponentChild } from 'core/vdom/helpers/index'
 
 type VNodeCache = { [key: string]: ?VNode };
 
+// 从配置中拿到组件的名字
+// 如果不是自定义组件，那么拿元素的标签名字
 function getComponentName (opts: ?VNodeComponentOptions): ?string {
   return opts && (opts.Ctor.options.name || opts.tag)
 }
